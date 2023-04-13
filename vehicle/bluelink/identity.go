@@ -133,7 +133,7 @@ func (v *Identity) setLanguage(cookieClient *request.Helper, language string) er
 	return err
 }
 
-func (v *Identity) brandLogin(cookieClient *request.Helper, user, password string) (string, error) {
+func (v *Identity) brandLogin(cookieClient *request.Helper, user, password string, vin string) (string, error) {
 	req, err := request.New(http.MethodGet, v.config.URI+IntegrationInfoURL, nil, request.JSONEncoding)
 
 	var info struct {
@@ -175,6 +175,7 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 		data := url.Values{
 			"username":     []string{user},
 			"password":     []string{password},
+			"vin":          []string{vin},
 			"credentialId": []string{""},
 			"rememberMe":   []string{"on"},
 		}
@@ -237,10 +238,11 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 	return code, err
 }
 
-func (v *Identity) bluelinkLogin(cookieClient *request.Helper, user, password string) (string, error) {
+func (v *Identity) bluelinkLogin(cookieClient *request.Helper, user, password string, vin string) (string, error) {
 	data := map[string]interface{}{
 		"email":    user,
 		"password": password,
+		"vin": vin
 	}
 
 	req, err := request.New(http.MethodPost, v.config.URI+LoginURL, request.MarshalJSON(data), request.JSONEncoding)
@@ -332,8 +334,8 @@ func (v *Identity) Login(user, password, language string) (err error) {
 	var code string
 	if err == nil {
 		// try new login first, then fallback
-		if code, err = v.brandLogin(cookieClient, user, password); err != nil {
-			code, err = v.bluelinkLogin(cookieClient, user, password)
+		if code, err = v.brandLogin(cookieClient, user, password, v.VIN); err != nil {
+			code, err = v.bluelinkLogin(cookieClient, user, password, v.VIN)
 		}
 	}
 
