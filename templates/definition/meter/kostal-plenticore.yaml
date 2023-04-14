@@ -41,7 +41,7 @@ render: |
     source: modbus # use ModBus plugin
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
-      address: 114 # (see ba_kostal_interface_modbus-tcp_sunspec.pdf)
+      address: 110 # (see ba_kostal_interface_modbus-tcp_sunspec.pdf)
       type: holding
       decode: float32s # may be float32 on specific firmware/devices
   {{- end }}
@@ -51,13 +51,6 @@ render: |
   model: sunspec
   power: 802:W # sunspec model 802 battery
   soc: 802:SoC # sunspec model 802 battery
-  energy:
-    source: modbus # use ModBus plugin
-    {{- include "modbus" . | indent 2 }}
-    register: # manual non-sunspec register configuration
-      address: 110 # (see ba_kostal_interface_modbus-tcp_sunspec.pdf)
-      type: holding
-      decode: float32s # may be float32 on specific firmware/devices
   {{- if ne .capacity "" }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
