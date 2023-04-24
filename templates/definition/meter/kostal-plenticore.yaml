@@ -55,25 +55,3 @@ render: |
   capacity: {{ .capacity }} # kWh
   {{- end }}
   {{- end }}
-  {{- if eq .usage "grid" }}
-  type: custom
-  power:
-    source: calc
-    sub:
-    - source: modbus # Total active power (powermeter)
-      {{- include "modbus" . }}
-      register: # manual non-sunspec register configuration
-        address: 256 # (see ba_kostal_interface_modbus-tcp_sunspec.pdf) (Position 1)
-        type: holding
-        decode: float32s # may be float32 on specific firmware/devices
-    - source: modbus # Home own consumption from battery
-      {{- include "modbus" . }}
-      register: 106 # (see ba_kostal_interface_modbus-tcp_sunspec.pdf)
-      type: holding
-      decode: float32s # may be float32 on specific firmware/devices
-    - source: modbus # Home own consumption from PV
-      {{- include "modbus" . }}
-      register: 116 # (see ba_kostal_interface_modbus-tcp_sunspec.pdf)
-      type: holding
-      decode: float32s # may be float32 on specific firmware/devices
-  {{- end }}
