@@ -9,7 +9,7 @@ import (
 )
 
 type calcProvider struct {
-	add, mul, div []func() (float64, error)
+	add, sub,  mul, div []func() (float64, error)
 	sign          func() (float64, error)
 }
 
