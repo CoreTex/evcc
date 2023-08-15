@@ -326,7 +326,7 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	return (*oauth2.Token)(&res), err
 }
 
-func (v *Identity) Login(user, password, language string, vin string) (err error) {
+func (v *Identity) Login(user, password, language string) (err error) {
 	if user == "" || password == "" {
 		return api.ErrMissingCredentials
 	}
@@ -345,8 +345,8 @@ func (v *Identity) Login(user, password, language string, vin string) (err error
 	var code string
 	if err == nil {
 		// try new login first, then fallback
-		if code, err = v.brandLogin(cookieClient, user, password, vin); err != nil {
-			code, err = v.bluelinkLogin(cookieClient, user, password, vin)
+		if code, err = v.brandLogin(cookieClient, user, password, v.VIN); err != nil {
+			code, err = v.bluelinkLogin(cookieClient, user, password, v.VIN)
 		}
 	}
 
