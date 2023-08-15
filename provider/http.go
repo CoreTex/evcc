@@ -39,7 +39,7 @@ type Auth struct {
 }
 
 // NewHTTPProviderFromConfig creates a HTTP provider
-func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error) {
+func NewHTTPProviderFromConfig(other map[string]interface{}) (Provider, error) {
 	cc := struct {
 		URI, Method       string
 		Headers           map[string]string
@@ -60,8 +60,9 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		return nil, err
 	}
 
+	log := util.NewLogger("http")
 	http := NewHTTP(
-		util.NewLogger("http"),
+		log,
 		cc.Method,
 		cc.URI,
 		cc.Insecure,
@@ -80,7 +81,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 
 	if err == nil {
 		var pipe *pipeline.Pipeline
-		pipe, err = pipeline.New(cc.Settings)
+		pipe, err = pipeline.New(log, cc.Settings)
 		http = http.WithPipeline(pipe)
 	}
 
@@ -246,6 +247,15 @@ var _ SetIntProvider = (*HTTP)(nil)
 // IntSetter sends int request
 func (p *HTTP) IntSetter(param string) func(int64) error {
 	return func(val int64) error {
+		return p.set(param, val)
+	}
+}
+
+var _ SetFloatProvider = (*HTTP)(nil)
+
+// FloatSetter sends int request
+func (p *HTTP) FloatSetter(param string) func(float64) error {
+	return func(val float64) error {
 		return p.set(param, val)
 	}
 }

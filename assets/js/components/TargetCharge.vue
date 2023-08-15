@@ -3,7 +3,7 @@
 		<div class="mt-4">
 			<div class="form-group d-lg-flex align-items-baseline mb-2 justify-content-between">
 				<!-- eslint-disable vue/no-v-html -->
-				<label for="targetTimeLabel" class="mb-3 me-3">
+				<label :for="`targetTimeLabel${id}`" class="mb-3 me-3">
 					<span v-if="socBasedCharging">
 						{{
 							$t("main.targetCharge.descriptionSoc", {
@@ -21,7 +21,12 @@
 				</label>
 				<!-- eslint-enable vue/no-v-html -->
 				<div class="d-flex justify-content-between date-selection">
-					<select v-model="selectedDay" class="form-select me-2">
+					<select
+						:id="`targetTimeLabel${id}`"
+						v-model="selectedDay"
+						class="form-select me-2"
+						data-testid="target-day"
+					>
 						<option v-for="opt in dayOptions()" :key="opt.value" :value="opt.value">
 							{{ opt.name }}
 						</option>
@@ -32,22 +37,29 @@
 						class="form-control ms-2 time-selection"
 						:step="60 * 5"
 						required
+						data-testid="target-time"
 					/>
 				</div>
 			</div>
 			<p class="mb-0">
-				<span v-if="timeInThePast" class="d-block text-danger">
+				<span v-if="timeInThePast" class="d-block text-danger mb-1">
 					{{ $t("main.targetCharge.targetIsInThePast") }}
 				</span>
-				<span v-else-if="timeTooFarInTheFuture" class="d-block text-secondary">
+				<span v-if="!socBasedCharging && !targetEnergy" class="d-block text-danger mb-1">
+					{{ $t("main.targetCharge.targetEnergyRequired") }}
+				</span>
+				<span v-if="timeTooFarInTheFuture" class="d-block text-secondary mb-1">
 					{{ $t("main.targetCharge.targetIsTooFarInTheFuture") }}
 				</span>
-				<span v-if="costLimitExists" class="d-block text-secondary">
+				<span v-if="costLimitExists" class="d-block text-secondary mb-1">
 					{{
 						$t("main.targetCharge.costLimitIgnore", {
 							limit: costLimitText,
 						})
 					}}
+				</span>
+				<span v-if="['off', 'now'].includes(mode)" class="d-block text-secondary mb-1">
+					{{ $t("main.targetCharge.onlyInPvMode") }}
 				</span>
 				&nbsp;
 			</p>
@@ -77,7 +89,7 @@
 <script>
 import "@h2d2/shopicons/es/filled/plus";
 import "@h2d2/shopicons/es/filled/edit";
-import { CO2_UNIT } from "../units";
+import { CO2_TYPE } from "../units";
 import TargetChargePlan from "./TargetChargePlan.vue";
 import api from "../api";
 
@@ -99,7 +111,9 @@ export default {
 		socBasedCharging: Boolean,
 		disabled: Boolean,
 		smartCostLimit: Number,
-		smartCostUnit: String,
+		smartCostType: String,
+		currency: String,
+		mode: String,
 	},
 	emits: ["target-time-updated", "target-time-removed"],
 	data: function () {
@@ -109,6 +123,7 @@ export default {
 			plan: {},
 			tariff: {},
 			activeTab: "time",
+			loading: false,
 		};
 	},
 	computed: {
@@ -128,7 +143,7 @@ export default {
 		timeTooFarInTheFuture: function () {
 			if (this.tariff?.rates) {
 				const lastRate = this.tariff.rates[this.tariff.rates.length - 1];
-				if (lastRate.end) {
+				if (lastRate?.end) {
 					const end = new Date(lastRate.end);
 					return this.selectedTargetTime >= end;
 				}
@@ -144,8 +159,9 @@ export default {
 		targetChargePlanProps: function () {
 			const targetTime = this.selectedTargetTime;
 			const { rates } = this.tariff;
-			const { duration, unit, plan } = this.plan;
-			return rates ? { duration, rates, plan, unit, targetTime } : null;
+			const { duration, plan } = this.plan;
+			const { currency, smartCostType } = this;
+			return rates ? { duration, rates, plan, targetTime, currency, smartCostType } : null;
 		},
 		tariffLowest: function () {
 			return this.tariff?.rates.reduce((res, slot) => {
@@ -167,11 +183,11 @@ export default {
 				});
 			}
 			return this.$t("main.targetCharge.priceLimit", {
-				price: this.fmtPricePerKWh(this.smartCostLimit, this.smartCostUnit, true),
+				price: this.fmtPricePerKWh(this.smartCostLimit, this.currency, true),
 			});
 		},
 		isCo2() {
-			return this.smartCostUnit === CO2_UNIT;
+			return this.smartCostType === CO2_TYPE;
 		},
 	},
 	watch: {
@@ -198,18 +214,27 @@ export default {
 			if (
 				!this.timeInThePast &&
 				(this.targetEnergy || this.targetSoc) &&
-				!isNaN(this.selectedTargetTime)
+				!isNaN(this.selectedTargetTime) &&
+				!this.loading
 			) {
 				try {
-					const opts = {
-						params: { targetTime: this.selectedTargetTime },
-					};
+					this.loading = true;
 					this.plan = (
-						await api.get(`loadpoints/${this.id}/target/plan`, opts)
+						await api.get(`loadpoints/${this.id}/target/plan`, {
+							params: { targetTime: this.selectedTargetTime },
+						})
 					).data.result;
-					this.tariff = (await api.get(`tariff/planner`)).data.result;
+
+					const tariffRes = await api.get(`tariff/planner`, {
+						validateStatus: function (status) {
+							return status >= 200 && status < 500;
+						},
+					});
+					this.tariff = tariffRes.status === 404 ? { rates: [] } : tariffRes.data.result;
 				} catch (e) {
 					console.error(e);
+				} finally {
+					this.loading = false;
 				}
 			}
 		},

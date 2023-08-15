@@ -1,5 +1,10 @@
 <template>
-	<LabelAndValue class="flex-grow-1" :label="$t('main.vehicle.targetSoc')" align="end">
+	<LabelAndValue
+		class="flex-grow-1"
+		:label="$t('main.vehicle.targetSoc')"
+		align="end"
+		data-testid="target-soc"
+	>
 		<h3 class="value m-0 d-block d-sm-flex align-items-baseline justify-content-end">
 			<label class="position-relative">
 				<select :value="targetSoc" class="custom-select" @change="change">
@@ -7,7 +12,7 @@
 						{{ text }}
 					</option>
 				</select>
-				<span class="text-decoration-underline">
+				<span class="text-decoration-underline" data-testid="target-soc-value">
 					<AnimatedNumber :to="targetSoc" :format="formatSoc" />
 				</span>
 			</label>
@@ -23,10 +28,12 @@
 import LabelAndValue from "./LabelAndValue.vue";
 import AnimatedNumber from "./AnimatedNumber.vue";
 import { distanceUnit } from "../units";
+import formatter from "../mixins/formatter";
 
 export default {
 	name: "TargetSocSelect",
 	components: { LabelAndValue, AnimatedNumber },
+	mixins: [formatter],
 	props: {
 		targetSoc: Number,
 		rangePerSoc: Number,
@@ -64,7 +71,7 @@ export default {
 			return `${Math.round(value)}%`;
 		},
 		formatKm: function (value) {
-			return `${Math.round(value)} ${distanceUnit()}`;
+			return `${this.fmtNumber(value, 0)} ${distanceUnit()}`;
 		},
 	},
 };

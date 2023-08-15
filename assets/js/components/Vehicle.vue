@@ -20,7 +20,7 @@
 				class="flex-grow-1"
 				:label="$t('main.vehicle.vehicleSoc')"
 				:value="vehicleSoc ? `${Math.round(vehicleSoc)}%` : '--'"
-				:extraValue="range ? `${Math.round(range)} ${rangeUnit}` : null"
+				:extraValue="range ? `${fmtNumber(range, 0)} ${rangeUnit}` : null"
 				align="start"
 			/>
 			<LabelAndValue
@@ -115,9 +115,10 @@ export default {
 		vehicles: Array,
 		climaterActive: Boolean,
 		smartCostLimit: Number,
-		smartCostUnit: String,
+		smartCostType: String,
 		tariffGrid: Number,
 		tariffCo2: Number,
+		currency: String,
 	},
 	emits: [
 		"target-time-removed",

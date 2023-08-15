@@ -3,13 +3,13 @@
 		<LabelAndValue
 			class="root flex-grow-1"
 			:label="title"
-			:class="disabled ? 'opacity-0' : 'opacity-1'"
+			:class="disabled ? 'opacity-25' : 'opacity-100'"
+			data-testid="charging-plan"
 		>
 			<h3 class="value m-0 d-block d-sm-flex align-items-baseline justify-content-center">
 				<button
 					class="value-button p-0"
 					:class="enabled ? 'evcc-default-text' : 'text-gray'"
-					:disabled="disabled"
 					@click="openModal"
 				>
 					<strong v-if="minSocEnabled">{{ minSocLabel }}</strong>
@@ -43,7 +43,7 @@
 							></button>
 						</div>
 						<div class="modal-body pt-2">
-							<ul v-if="showTabs" class="nav nav-tabs">
+							<ul class="nav nav-tabs">
 								<li class="nav-item">
 									<a
 										class="nav-link"
@@ -61,7 +61,7 @@
 										href="#"
 										@click.prevent="showArrivalTab"
 									>
-										{{ $t("main.chargingPlan.arrivalTab") }} 🧪
+										{{ $t("main.chargingPlan.arrivalTab") }}
 									</a>
 								</li>
 							</ul>
@@ -111,7 +111,9 @@ export default {
 		vehicleSoc: Number,
 		vehicleName: String,
 		smartCostLimit: Number,
-		smartCostUnit: String,
+		smartCostType: String,
+		currency: String,
+		mode: String,
 	},
 	emits: ["target-time-updated", "target-time-removed", "minsoc-updated"],
 	data: function () {
@@ -129,7 +131,7 @@ export default {
 			return this.targetChargeEnabled || this.minSocEnabled;
 		},
 		minSocLabel: function () {
-			return `${Math.round(this.minSoc)} %`;
+			return `${Math.round(this.minSoc)}%`;
 		},
 		modalId: function () {
 			return `chargingPlanModal_${this.id}`;
@@ -144,7 +146,7 @@ export default {
 			return this.$t("main.chargingPlan.title");
 		},
 		minSocEnabled: function () {
-			return this.minSoc >= this.vehicleSoc && this.$hiddenFeatures();
+			return this.minSoc > this.vehicleSoc;
 		},
 		departureTabActive: function () {
 			return this.activeTab === "departure";
@@ -157,9 +159,6 @@ export default {
 		},
 		chargingPlanArrival: function () {
 			return this.collectProps(ChargingPlanArrival);
-		},
-		showTabs: function () {
-			return this.$hiddenFeatures();
 		},
 	},
 	mounted() {
@@ -179,11 +178,9 @@ export default {
 			this.isModalVisible = false;
 		},
 		openModal() {
+			this.showDeatureTab();
 			if (this.minSocEnabled) {
 				this.showArrivalTab();
-			}
-			if (this.targetChargeEnabled) {
-				this.showDeatureTab();
 			}
 			this.modal.show();
 		},

@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"reflect"
 	"strings"
 	"time"
 
@@ -19,16 +20,20 @@ import (
 
 // Session is a single charging session
 type Session struct {
-	ID            uint      `json:"id" csv:"-" gorm:"primarykey"`
-	Created       time.Time `json:"created"`
-	Finished      time.Time `json:"finished"`
-	Loadpoint     string    `json:"loadpoint"`
-	Identifier    string    `json:"identifier"`
-	Vehicle       string    `json:"vehicle"`
-	Odometer      float64   `json:"odometer" format:"int"`
-	MeterStart    float64   `json:"meterStart" csv:"Meter Start (kWh)" gorm:"column:meter_start_kwh"`
-	MeterStop     float64   `json:"meterStop" csv:"Meter Stop (kWh)" gorm:"column:meter_end_kwh"`
-	ChargedEnergy float64   `json:"chargedEnergy" csv:"Charged Energy (kWh)" gorm:"column:charged_kwh"`
+	ID              uint      `json:"id" csv:"-" gorm:"primarykey"`
+	Created         time.Time `json:"created"`
+	Finished        time.Time `json:"finished"`
+	Loadpoint       string    `json:"loadpoint"`
+	Identifier      string    `json:"identifier"`
+	Vehicle         string    `json:"vehicle"`
+	Odometer        *float64  `json:"odometer" format:"int"`
+	MeterStart      *float64  `json:"meterStart" csv:"Meter Start (kWh)" gorm:"column:meter_start_kwh"`
+	MeterStop       *float64  `json:"meterStop" csv:"Meter Stop (kWh)" gorm:"column:meter_end_kwh"`
+	ChargedEnergy   float64   `json:"chargedEnergy" csv:"Charged Energy (kWh)" gorm:"column:charged_kwh"`
+	SolarPercentage *float64  `json:"solarPercentage" csv:"Solar (%)" gorm:"column:solar_percentage"`
+	Price           *float64  `json:"price" csv:"Price" gorm:"column:price"`
+	PricePerKWh     *float64  `json:"pricePerKWh" csv:"Price/kWh" gorm:"column:price_per_kwh"`
+	Co2PerKWh       *float64  `json:"co2PerKWh" csv:"CO2/kWh (gCO2eq)" gorm:"column:co2_per_kwh"`
 }
 
 // Sessions is a list of sessions
@@ -52,7 +57,6 @@ func (t *Sessions) writeHeader(ctx context.Context, ww *csv.Writer) error {
 		caption, err := localizer.Localize(&locale.Config{
 			MessageID: "sessions.csv." + strings.ToLower(f.Name()),
 		})
-
 		if err != nil {
 			if csv != "" {
 				caption = csv
@@ -74,23 +78,24 @@ func (t *Sessions) writeRow(ww *csv.Writer, mp *message.Printer, r Session) erro
 			continue
 		}
 
-		var val string
-		format := f.Tag("format")
+		digits := 3
+		if format := f.Tag("format"); format == "int" {
+			digits = 0
+		}
 
-		switch v := f.Value().(type) {
-		case float64:
-			switch format {
-			case "int":
-				val = mp.Sprint(number.Decimal(v, number.NoSeparator(), number.MaxFractionDigits(0)))
+		var val string
+
+		if rv := reflect.ValueOf(f.Value()); !(rv.Kind() == reflect.Pointer && rv.IsNil()) {
+			switch v := f.Value().(type) {
+			case float64, *float64:
+				val = mp.Sprint(number.Decimal(v, number.NoSeparator(), number.MaxFractionDigits(digits)))
+			case time.Time:
+				if !v.IsZero() {
+					val = v.Local().Format("2006-01-02 15:04:05")
+				}
 			default:
-				val = mp.Sprint(number.Decimal(v, number.NoSeparator(), number.MaxFractionDigits(3)))
+				val = fmt.Sprintf("%v", f.Value())
 			}
-		case time.Time:
-			if !v.IsZero() {
-				val = v.Local().Format("2006-01-02 15:04:05")
-			}
-		default:
-			val = fmt.Sprintf("%v", f.Value())
 		}
 
 		row = append(row, val)

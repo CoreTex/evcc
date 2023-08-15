@@ -13,11 +13,11 @@ func (lp *Loadpoint) chargeMeterTotal() float64 {
 
 	f, err := m.TotalEnergy()
 	if err != nil {
-		lp.log.ERROR.Printf("charge meter total import: %v", err)
+		lp.log.ERROR.Printf("charge total import: %v", err)
 		return 0
 	}
 
-	lp.log.DEBUG.Printf("charge meter total import: %.3fkWh", f)
+	lp.log.DEBUG.Printf("charge total import: %.3fkWh", f)
 
 	return f
 }
@@ -32,8 +32,8 @@ func (lp *Loadpoint) createSession() {
 
 	lp.session = lp.db.Session(lp.chargeMeterTotal())
 
-	if lp.vehicle != nil {
-		lp.session.Vehicle = lp.vehicle.Title()
+	if vehicle := lp.GetVehicle(); vehicle != nil {
+		lp.session.Vehicle = vehicle.Title()
 	}
 
 	if c, ok := lp.charger.(api.Identifier); ok {
@@ -45,29 +45,36 @@ func (lp *Loadpoint) createSession() {
 
 // stopSession ends a charging session segment and persists the session.
 func (lp *Loadpoint) stopSession() {
+	s := lp.session
+
 	// test guard
-	if lp.db == nil || lp.session == nil {
+	if lp.db == nil || s == nil {
 		return
 	}
 
 	// abort the session if charging has never started
-	if lp.session.Created.IsZero() {
+	if s.Created.IsZero() {
 		return
 	}
 
-	lp.session.Finished = lp.clock.Now()
-	lp.session.MeterStop = lp.chargeMeterTotal()
-
-	chargedEnergy := lp.getChargedEnergy() / 1e3
-	if delta := lp.session.MeterStop - lp.session.MeterStart; delta < chargedEnergy && lp.session.MeterStart*lp.session.MeterStop > 0 {
-		chargedEnergy = delta
+	s.Finished = lp.clock.Now()
+	meterStop := lp.chargeMeterTotal()
+	if meterStop > 0 {
+		s.MeterStop = &meterStop
 	}
 
-	if chargedEnergy > lp.session.ChargedEnergy {
-		lp.session.ChargedEnergy = chargedEnergy
+	if chargedEnergy := lp.getChargedEnergy() / 1e3; chargedEnergy > s.ChargedEnergy {
+		lp.sessionEnergy.Update(chargedEnergy)
 	}
 
-	lp.db.Persist(lp.session)
+	solarPerc := lp.sessionEnergy.SolarPercentage()
+	s.SolarPercentage = &solarPerc
+	s.Price = lp.sessionEnergy.Price()
+	s.PricePerKWh = lp.sessionEnergy.PricePerKWh()
+	s.Co2PerKWh = lp.sessionEnergy.Co2PerKWh()
+	s.ChargedEnergy = lp.sessionEnergy.TotalWh() / 1e3
+
+	lp.db.Persist(s)
 }
 
 type sessionOption func(*db.Session)

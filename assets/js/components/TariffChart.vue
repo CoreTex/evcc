@@ -18,7 +18,7 @@
 			@click="selectSlot(index)"
 		>
 			<div class="slot-bar" :style="priceStyle(slot.price)">
-				<span v-if="slot.price === undefined" class="unknown">?</span>
+				<span v-if="slot.price === undefined && avgPrice" class="unknown">?</span>
 			</div>
 			<div class="slot-label">
 				{{ slot.startHour }}
@@ -31,7 +31,7 @@
 
 <script>
 import formatter from "../mixins/formatter";
-import { CO2_UNIT } from "../units";
+import { CO2_TYPE } from "../units";
 
 export default {
 	name: "TariffChart",
@@ -44,15 +44,17 @@ export default {
 		return { activeIndex: null, startTime: new Date() };
 	},
 	computed: {
-		maxPrice() {
-			let result = 0;
+		priceInfo() {
+			let max = Number.MIN_VALUE;
+			let min = 0;
 			this.slots
 				.map((s) => s.price)
 				.filter((price) => price !== undefined)
 				.forEach((price) => {
-					result = Math.max(result, price);
+					max = Math.max(max, price);
+					min = Math.min(min, price);
 				});
-			return result;
+			return { min, range: max - min };
 		},
 		avgPrice() {
 			let sum = 0;
@@ -66,7 +68,7 @@ export default {
 			return sum / count;
 		},
 		isCo2() {
-			return this.unit === CO2_UNIT;
+			return this.unit === CO2_TYPE;
 		},
 		activeSlot() {
 			return this.slots[this.activeIndex];
@@ -89,9 +91,11 @@ export default {
 		},
 		priceStyle(price) {
 			const value = price === undefined ? this.avgPrice : price;
-			return {
-				height: `${(100 / this.maxPrice) * value}%`,
-			};
+			const height =
+				value !== undefined
+					? `${10 + (90 / this.priceInfo.range) * (value - this.priceInfo.min)}%`
+					: "100%";
+			return { height };
 		},
 	},
 };
