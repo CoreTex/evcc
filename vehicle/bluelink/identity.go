@@ -253,7 +253,7 @@ func (v *Identity) bluelinkLogin(cookieClient *request.Helper, user, password st
 	data := map[string]interface{}{
 		"email":    user,
 		"password": password,
-		"vin": vin,
+		"vin": vin
 	}
 
 	req, err := request.New(http.MethodPost, v.config.URI+LoginURL, request.MarshalJSON(data), request.JSONEncoding)
