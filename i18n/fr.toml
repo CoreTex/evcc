@@ -1,6 +1,8 @@
 [batterySettings]
 batteryLevel = "Niveau de la batterie"
 capacity = "{energy} sur {total}"
+disclaimerHint = "NB :"
+disclaimerText = "ces réglages n'affectent que le mode solaire. Le comportement de charge est adapté en conséquence."
 legendBottomName = "priorité maison"
 legendBottomSubline = "pas utilisé pour la recharge"
 legendMiddleName = "véhicule en premier"
@@ -10,13 +12,45 @@ legendTopAutostart = "démarre automatiquement"
 legendTopName = "recharge soutenue par la batterie"
 legendTopSubline = "sans interruption"
 modalTitle = "Réglages de la batterie"
-note = "NB : ces réglages n'affectent que le mode solaire. Le comportement de charge est adapté en conséquence."
 
 [batterySettings.bufferStart]
 full = "quand presque pleine"
 low = "quand partiellement pleine"
 medium = "quand à moitié pleine"
 never = "seulement quand surplus suffisant"
+
+[config]
+
+[config.form]
+example = "Exemple"
+optional = "optionnel"
+
+[config.main]
+addVehicle = "Ajouter un véhicule"
+edit = "éditer"
+title = "Configuration"
+vehicles = "Mes véhicules"
+
+[config.validation]
+failed = "échec"
+label = "Statut"
+running = "validation..."
+success = "réussi"
+unknown = "inconnu"
+validate = "valider"
+
+[config.vehicle]
+cancel = "Annuler"
+delete = "Supprimer un véhicule"
+generic = "Autres intégrations"
+offline = "Véhicule générique"
+online = "Véhicules avec API en ligne"
+save = "Enregistrer"
+scooter = "Scooter"
+template = "Fabricant"
+titleAdd = "Ajouter un véhicule"
+titleEdit = "Modifier le véhicule"
+validateSave = "Valider & enregistrer"
 
 [footer]
 
@@ -124,7 +158,6 @@ modalTitle = "Voulez-vous vraiment redémarrer ?"
 vehicles = "Place de stationnement"
 
 [main.chargingPlan]
-activeLabel = "{time}"
 arrivalTab = "Arrivée"
 departureTab = "Départ"
 modalTitle = "Planification de la charge"
@@ -197,13 +230,13 @@ logout = "déconnexion"
 
 [main.targetCharge]
 activate = "Activer"
-activeLabel = "{time}"
 co2Limit = "Limite de CO₂ {co2]"
 costLimitIgnore = "La limite configurée {limit} sera ignorée durant cette période."
 descriptionEnergy = "Jusqu'à quand le véhicule doit-il être chargé à {targetEnergy}?"
 descriptionSoc = "Quand le véhicule doit-il être chargé à {targetSoc}%?"
 inactiveLabel = "Temps visé"
 modalTitle = "Définir l'heure cible"
+onlyInPvMode = "Le plan de recharge ne fonctionne qu’en mode solaire."
 planDuration = "Durée de charge"
 planPeriodLabel = "Période"
 planPeriodValue = "{start} à {end}"
@@ -211,7 +244,6 @@ planUnknown = "encore inconnu"
 priceLimit = "limite de prix : {price}"
 remove = "Ôter"
 setTargetTime = "aucun"
-targetEnergyRequired = "Vous devez aussi régler une limite d'énergie."
 targetIsInThePast = "Choisis une période dans le futur, Marty."
 targetIsTooFarInTheFuture = "Nous ajusterons le plan dès qu'on en saura plus sur le futur."
 title = "Temps visé"
@@ -238,6 +270,8 @@ fallbackName = "Véhicule"
 moreActions = "Plus d'actions"
 none = "Pas de véhicule"
 targetSoc = "Limite"
+temp = "Temp."
+tempLimit = "Temp. limite"
 unknown = "Véhicule invité"
 vehicleSoc = "Charge"
 
@@ -287,11 +321,13 @@ meterstart = "Compteur début"
 meterstop = "Compteur fin"
 odometer = "Kilométrage"
 price = "Prix"
-started = "Début"
+started = "Commencé"
 title = "Session de charge"
 
 [sessions]
+avgPower = "Puissance ⌀"
 avgPrice = "Prix ⌀"
+chargeDuration = "Durée"
 co2 = "CO₂ ⌀"
 csvMonth = "Télécharger CSV {month}"
 csvTotal = "Télécharger CSV total"
@@ -309,7 +345,7 @@ vehicle = "Véhicule"
 
 [sessions.csv]
 chargedenergy = "Énergie (kWh)"
-created = "Début"
+created = "Créé"
 finished = "Fin"
 identifier = "Identifiant"
 loadpoint = "Point de chargement"

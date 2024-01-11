@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery,Tariff
+//go:generate mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery,Tariff,BatteryController
 
 // ChargeMode is the charge operation mode. Valid values are off, now, minpv and pv
 type ChargeMode string
@@ -45,22 +45,28 @@ const (
 var StatusEasA = map[ChargeStatus]ChargeStatus{StatusE: StatusA}
 
 // ChargeStatusString converts a string to ChargeStatus
-func ChargeStatusString(s string) (ChargeStatus, error) {
-	status := strings.ToUpper(strings.TrimSpace(strings.Trim(s, "\x00")))
-	switch s1 := status[:1]; s1 {
+func ChargeStatusString(status string) (ChargeStatus, error) {
+	s := strings.ToUpper(strings.Trim(status, "\x00 "))
+
+	if len(s) == 0 {
+		return StatusNone, fmt.Errorf("invalid status: %s", status)
+	}
+
+	switch s1 := s[:1]; s1 {
 	case "A", "B":
 		return ChargeStatus(s1), nil
+
 	case "C", "D":
-		switch status {
-		case "C1", "D1":
+		if s == "C1" || s == "D1" {
 			return StatusB, nil
-		default:
-			return StatusC, nil
 		}
+		return StatusC, nil
+
 	case "E", "F":
-		return ChargeStatus(s1), fmt.Errorf("invalid status: %s", status)
+		return ChargeStatus(s1), fmt.Errorf("invalid status: %s", s)
+
 	default:
-		return StatusNone, fmt.Errorf("invalid status: %s", s)
+		return StatusNone, fmt.Errorf("invalid status: %s", status)
 	}
 }
 
@@ -118,8 +124,8 @@ type ChargeState interface {
 	Status() (ChargeStatus, error)
 }
 
-// CurrentLimiter provides settings charging maximum charging current
-type CurrentLimiter interface {
+// CurrentController provides settings charging maximum charging current
+type CurrentController interface {
 	MaxCurrent(current int64) error
 }
 
@@ -128,12 +134,17 @@ type CurrentGetter interface {
 	GetMaxCurrent() (float64, error)
 }
 
+// BatteryController optionally allows to control home battery (dis)charging behaviour
+type BatteryController interface {
+	SetBatteryMode(BatteryMode) error
+}
+
 // Charger provides current charging status and enable/disable charging
 type Charger interface {
 	ChargeState
 	Enabled() (bool, error)
 	Enable(enable bool) error
-	CurrentLimiter
+	CurrentController
 }
 
 // ChargerEx provides milli-amp precision charger current control
@@ -209,8 +220,14 @@ type VehiclePosition interface {
 	Position() (float64, float64, error)
 }
 
-// SocLimiter returns the vehicles charge limit
+// CurrentLimiter returns the current limits
+type CurrentLimiter interface {
+	GetMinMaxCurrent() (float64, float64, error)
+}
+
+// SocLimiter returns the soc limit
 type SocLimiter interface {
+	// TODO rename LimitSoc
 	TargetSoc() (float64, error)
 }
 

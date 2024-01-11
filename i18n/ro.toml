@@ -1,6 +1,8 @@
 [batterySettings]
 batteryLevel = "Nivelul bateriei"
 capacity = "{energy} din {total}"
+disclaimerHint = "Nota:"
+disclaimerText = "Aceste setari afecteaza doar modul solar. Procesul de incarcare este ajustat corespunzator"
 legendBottomName = "prioritate casa"
 legendBottomSubline = "neutilizat pentru incarcare"
 legendMiddleName = "in primul rand vehiculul"
@@ -10,7 +12,6 @@ legendTopAutostart = "porneste automat"
 legendTopName = "Incarcare ajutata de baterie"
 legendTopSubline = "fara intreruperi"
 modalTitle = "Setari baterie"
-note = "Nota: Aceste setari afecteaza doar modul solar. Procesul de incarcare este ajustat corespunzator"
 
 [batterySettings.bufferStart]
 full = "cand este aproape plin"
@@ -111,7 +112,6 @@ restartDescription = "Ai incercat sa inchizi si sa deschizi din nou? "
 vehicles = "Parcare"
 
 [main.chargingPlan]
-activeLabel = "{time}"
 arrivalTab = "Ajungere"
 departureTab = "Plecare"
 modalTitle = "Plan de incarcare"
@@ -177,7 +177,6 @@ logout = "deconectează"
 
 [main.targetCharge]
 activate = "Activează"
-activeLabel = "{time}"
 co2Limit = "limita CO₂ de {co2}"
 costLimitIgnore = "{limit} configurata de va fi ingnorata in acest timp."
 descriptionEnergy = "Pâna când ar trebui ca {targetEnergy} să fie încărcată in vehicul?"

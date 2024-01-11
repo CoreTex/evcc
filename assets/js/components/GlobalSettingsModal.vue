@@ -68,11 +68,10 @@
 								<TelemetrySettings :sponsor="sponsor" class="mt-1 mb-0" />
 							</FormRow>
 							<FormRow
-								v-if="isNightly"
 								id="hiddenFeaturesEnabled"
 								:label="`${$t('settings.hiddenFeatures.label')} 🧪`"
 							>
-								<div class="form-check form-switch my-1">
+								<div class="form-check form-switch col-form-label">
 									<input
 										id="hiddenFeaturesEnabled"
 										v-model="hiddenFeatures"
@@ -81,7 +80,7 @@
 										role="switch"
 									/>
 									<div class="form-check-label">
-										<label for="telemetryEnabled">
+										<label for="hiddenFeaturesEnabled">
 											{{ $t("settings.hiddenFeatures.value") }}
 										</label>
 									</div>
@@ -130,9 +129,6 @@ export default {
 			// sort by name
 			locales.sort((a, b) => (a.name < b.name ? -1 : 1));
 			return locales;
-		},
-		isNightly: () => {
-			return !!window?.evcc?.commit;
 		},
 	},
 	watch: {

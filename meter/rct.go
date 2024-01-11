@@ -9,7 +9,6 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-
 	"github.com/mlnoga/rct"
 )
 
@@ -83,8 +82,8 @@ func NewRCT(uri, usage string, cache time.Duration, capacity func() float64) (ap
 	}
 
 	bo := backoff.NewExponentialBackOff()
-	bo.MaxElapsedTime = time.Second
 	bo.InitialInterval = 10 * time.Millisecond
+	bo.MaxInterval = time.Second
 
 	m := &RCT{
 		usage: strings.ToLower(usage),

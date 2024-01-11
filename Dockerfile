@@ -11,8 +11,8 @@ RUN npm ci
 
 # build ui
 COPY Makefile .
-COPY .*.js .
-COPY *.js .
+COPY .*.js ./
+COPY *.js ./
 COPY assets assets
 COPY i18n i18n
 
@@ -20,7 +20,7 @@ RUN make ui
 
 
 # STEP 2 build executable binary
-FROM --platform=$BUILDPLATFORM golang:1.20-alpine as builder
+FROM --platform=$BUILDPLATFORM golang:1.21-alpine as builder
 
 # Install git + SSL ca certificates.
 # Git is required for fetching the dependencies.
@@ -77,7 +77,7 @@ COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /build/evcc /usr/local/bin/evcc
 
-COPY docker/bin/* /app/
+COPY packaging/docker/bin/* /app/
 
 # mDNS
 EXPOSE 5353/udp

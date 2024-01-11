@@ -3,7 +3,6 @@ package provider
 import (
 	"errors"
 	"fmt"
-	"math"
 
 	"github.com/evcc-io/evcc/util"
 )
@@ -32,7 +31,7 @@ func NewCalcFromConfig(other map[string]interface{}) (Provider, error) {
 	}
 
 	o := &calcProvider{}
-	if i := int(math.Min(float64(len(cc.Add)), 1)) + int(math.Min(float64(len(cc.Mul)), 1)) + int(math.Min(float64(len(cc.Div)), 1)); i > 1 ||
+	if i := min(len(cc.Add), 1) + min(len(cc.Mul), 1) + min(len(cc.Div), 1); i > 1 ||
 		(len(cc.Add) > 0 && cc.Sign != nil) ||
 		(len(cc.Sub) > 0 && cc.Sign != nil) ||
 		(len(cc.Mul) > 0 && cc.Sign != nil) ||
@@ -83,22 +82,28 @@ func NewCalcFromConfig(other map[string]interface{}) (Provider, error) {
 	return o, nil
 }
 
-func (o *calcProvider) IntGetter() func() (int64, error) {
+var _ IntProvider = (*calcProvider)(nil)
+
+func (o *calcProvider) IntGetter() (func() (int64, error), error) {
 	return func() (int64, error) {
 		f, err := o.floatGetter()
 		return int64(f), err
-	}
+	}, nil
 }
 
-func (o *calcProvider) StringGetter() func() (string, error) {
+var _ StringProvider = (*calcProvider)(nil)
+
+func (o *calcProvider) StringGetter() (func() (string, error), error) {
 	return func() (string, error) {
 		f, err := o.floatGetter()
 		return fmt.Sprintf("%c", int(f)), err
-	}
+	}, nil
 }
 
-func (o *calcProvider) FloatGetter() func() (float64, error) {
-	return o.floatGetter
+var _ FloatProvider = (*calcProvider)(nil)
+
+func (o *calcProvider) FloatGetter() (func() (float64, error), error) {
+	return o.floatGetter, nil
 }
 
 func (o *calcProvider) floatGetter() (float64, error) {

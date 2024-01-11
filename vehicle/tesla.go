@@ -3,6 +3,7 @@ package vehicle
 import (
 	"context"
 	"errors"
+	"slices"
 	"time"
 
 	"github.com/bogosj/tesla"
@@ -194,7 +195,7 @@ func (v *Tesla) TargetSoc() (float64, error) {
 	return float64(res.Response.ChargeState.ChargeLimitSoc), nil
 }
 
-var _ api.CurrentLimiter = (*Tesla)(nil)
+var _ api.CurrentController = (*Tesla)(nil)
 
 // StartCharge implements the api.VehicleChargeController interface
 func (v *Tesla) MaxCurrent(current int64) error {
@@ -212,7 +213,11 @@ var _ api.VehicleChargeController = (*Tesla)(nil)
 
 // StartCharge implements the api.VehicleChargeController interface
 func (v *Tesla) StartCharge() error {
-	return v.apiError(v.vehicle.StartCharging())
+	err := v.apiError(v.vehicle.StartCharging())
+	if err != nil && slices.Contains([]string{"complete", "is_charging"}, err.Error()) {
+		return nil
+	}
+	return err
 }
 
 // StopCharge implements the api.VehicleChargeController interface
